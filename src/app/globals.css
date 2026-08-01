@@ -1,0 +1,28 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@theme {
+  --color-brand-teal: #1F5A54;
+  --color-brand-emerald: #2C5E57;
+  --color-brand-pastel: #E6EFEA;
+  --color-brand-slate: #64748B;
+  --color-brand-canvas: #F4F7F6;
+  --color-brand-ink: #0F172A;
+  --color-brand-border: #EAF0EE;
+  
+  --color-dark-canvas: #0B0F19;
+  --color-dark-surface: #111827;
+  --color-dark-border: #1E293B;
+  --color-dark-ink: #F8FAFC;
+
+  --font-outfit: var(--font-outfit), sans-serif;
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  --font-serif: var(--font-serif), serif;
+
+  --shadow-soft-teal: 0 8px 30px rgba(31, 90, 84, 0.05);
+  --shadow-elevated-teal: 0 14px 40px rgba(31, 90, 84, 0.12);
+  --shadow-card: 0 2px 12px rgba(15, 23, 42, 0.04);
+  
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+}
