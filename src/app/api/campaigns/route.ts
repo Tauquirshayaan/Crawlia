@@ -12,6 +12,10 @@ export async function GET(_req: NextRequest) {
       orderBy: { createdAt: 'desc' },
       include: {
         _count: { select: { campaignLeads: true, emailDrafts: true } },
+        campaignLeads: {
+          where: { status: 'SENT' },
+          select: { id: true }
+        }
       },
     });
 

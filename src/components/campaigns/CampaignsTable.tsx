@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import useSWR from "swr";
 import { Button } from "@/components/ui/Button";
 import { Plus, Search, ChevronDown, Info } from "lucide-react";
 import Link from "next/link";
@@ -18,9 +19,27 @@ export type CampaignData = {
   };
 };
 
+const fetcher = (url: string) => fetch(url).then(r => r.json()).then(data => data.map((c: any) => ({
+  id: c.id,
+  name: c.name,
+  status: c.status,
+  createdAt: new Date(c.createdAt),
+  stats: {
+    sent: c.campaignLeads?.length || 0,
+    openRate: 0,
+    replyRate: 0,
+  }
+})));
+
 export function CampaignsTable({ initialCampaigns }: { initialCampaigns: CampaignData[] }) {
   const router = useRouter();
-  const [campaigns, setCampaigns] = useState<CampaignData[]>(initialCampaigns);
+  
+  const { data: campaignsData } = useSWR<CampaignData[]>('/api/campaigns', fetcher, {
+    fallbackData: initialCampaigns,
+    refreshInterval: 5000, // Poll every 5s
+  });
+  
+  const campaigns = campaignsData || initialCampaigns;
   const [activeTab, setActiveTab] = useState<"all" | "running" | "created" | "draft" | "paused" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
 

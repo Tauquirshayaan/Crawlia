@@ -14,19 +14,24 @@ export default async function CampaignsPage() {
   const rawCampaigns = await prisma.campaign.findMany({
     where: { workspace: { members: { some: { userId } } } },
     orderBy: { createdAt: "desc" },
+    include: {
+      _count: { select: { campaignLeads: true, emailDrafts: true } },
+      campaignLeads: {
+        where: { status: 'SENT' },
+        select: { id: true }
+      }
+    }
   }).catch(() => []);
 
-  // Map to CampaignData format, mocking the analytics stats 
-  // since the analytics tracking worker pipeline is not built yet.
   const campaigns: CampaignData[] = rawCampaigns.map((c) => ({
     id: c.id,
     name: c.name,
     status: c.status,
     createdAt: c.createdAt,
     stats: {
-      sent: c.status === "DRAFT" ? 0 : Math.floor(Math.random() * 500) + 50,
-      openRate: c.status === "DRAFT" ? 0 : Number((Math.random() * 30 + 30).toFixed(1)), // 30-60%
-      replyRate: c.status === "DRAFT" ? 0 : Number((Math.random() * 10 + 5).toFixed(1)),  // 5-15%
+      sent: c.campaignLeads?.length || 0,
+      openRate: 0, 
+      replyRate: 0, 
     },
   }));
 

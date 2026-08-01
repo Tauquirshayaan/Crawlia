@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import useSWR, { mutate } from "swr";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -9,6 +10,8 @@ import { useRouter } from "next/navigation";
 
 type ToastType = { message: string; type: "success" | "error" } | null;
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export function DraftManager({
   campaignId,
   initialDrafts,
@@ -16,7 +19,36 @@ export function DraftManager({
   campaignId: string;
   initialDrafts: any[];
 }) {
+  const { data: campaignData } = useSWR(`/api/campaigns/${campaignId}`, fetcher, {
+    fallbackData: { emailDrafts: initialDrafts },
+    refreshInterval: 5000,
+  });
+
   const [drafts, setDrafts] = useState(initialDrafts);
+  const router = useRouter();
+
+  // Sync SWR data to local state if the server has newer drafts/statuses
+  const draftHash = JSON.stringify(
+    campaignData?.emailDrafts?.map((d: any) => `${d.id}-${d.status}`) || []
+  );
+
+  useEffect(() => {
+    if (campaignData?.emailDrafts) {
+      // Sort drafts exactly as they were on the server load
+      const sorted = [...campaignData.emailDrafts].sort((a, b) => {
+        const scoreA = a.lead?.score || 0;
+        const scoreB = b.lead?.score || 0;
+        if (scoreA !== scoreB) return scoreA - scoreB;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+      setDrafts(sorted);
+      
+      // Also refresh the server component so stat cards update
+      router.refresh();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftHash, router]);
+
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -25,7 +57,6 @@ export function DraftManager({
     body: "",
   });
   const [toast, setToast] = useState<ToastType>(null);
-  const router = useRouter();
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setToast({ message, type });
